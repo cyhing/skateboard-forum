@@ -1,180 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skateboard.my Forum</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 20px;
-      background: #f7f8fa;
-      color: #333;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .lang-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    button {
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      background: white;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover {
-      background: #efefef;
-    }
-    #disqus_thread {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Skateboard Forum</title>
 </head>
 <body>
-
-  <header>
-    <h1 id="forum-title">Skateboard.my Forum</h1>
-    <p id="forum-description">Join the conversation about skateboarding in Malaysia!</p>
-  </header>
-
-  <div class="lang-buttons">
-    <button onclick="setLanguage('en')">🇬🇧 English</button>
-    <button onclick="setLanguage('zh')">🇨🇳 中文</button>
-    <button onclick="setLanguage('ms')">🇲🇾 Bahasa Melayu</button>
+  <h1 id="pageTitle">💬 Forum</h1>
+  <div>
+    <button onclick="switchLang('en')">English</button>
+    <button onclick="switchLang('ms')">Bahasa Melayu</button>
+    <button onclick="switchLang('zh_CN')">中文</button>
   </div>
 
   <div id="disqus_thread"></div>
 
   <script>
-    // --- 語言資料 ---
-    const translations = {
-      en: {
-        title: "Skateboard.my Forum",
-        desc: "Join the conversation about skateboarding in Malaysia!"
-      },
-      zh: {
-        title: "Skateboard.my 滑板論壇",
-        desc: "一起來討論馬來西亞滑板的話題！"
-      },
-      ms: {
-        title: "Forum Skateboard.my",
-        desc: "Sertai perbincangan tentang skateboard di Malaysia!"
-      }
-    };
+  // 自動語言偵測 + 本地設定
+  let userLang = localStorage.getItem('lang') || 
+                 (navigator.language.startsWith('zh') ? 'zh_CN' :
+                  navigator.language.startsWith('ms') ? 'ms' : 'en');
 
-    // --- 自動偵測語言 ---
-    function detectLanguage() {
-      const lang = navigator.language.toLowerCase();
-      if (lang.includes('zh')) return 'zh';
-      if (lang.includes('ms') || lang.includes('id')) return 'ms';
-      return 'en';
-    }
+  // 根據語言改頁面標題
+  const titles = { en: "💬 Forum", ms: "💬 Forum (Bahasa Melayu)", zh_CN: "💬 讨论区" };
+  document.getElementById('pageTitle').innerText = titles[userLang] || titles['en'];
 
-    // --- 設定語言 ---
-    function setLanguage(lang) {
-      localStorage.setItem('forumLang', lang);
-      applyLanguage(lang);
-    }
+  // 建立 disqus_config
+  var disqus_config = function () {
+    this.page.url = window.location.href;
+    this.page.identifier = window.location.pathname;
+    this.language = userLang;
+  };
 
-    // --- 套用語言 ---
-    function applyLanguage(lang) {
-      const t = translations[lang] || translations['en'];
-      document.getElementById('forum-title').textContent = t.title;
-      document.getElementById('forum-description').textContent = t.desc;
-      loadDisqus(lang);
-    }
+  // 載入 Disqus
+  (function() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://skateboard-my.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
 
-/* Replace your existing loadDisqus(lang) with this */
-function loadDisqus(lang) {
-  var shortname = 'skateboard-my'; // <-- 確認你的 shortname
-
-  // helper config factory
-  function makeConfig(code) {
-    return function() {
-      this.page.url = window.location.href;
-      this.page.identifier = window.location.pathname || "skateboard-forum";
-      // set language only if provided
-      if (code) this.language = code;
-      // try to hide reactions (best-effort)
-      this.callbacks.onReady = [function() {
-        try {
-          ['.disqus-reactions','.postbox__reactions','.disqus-recommendations'].forEach(function(s){
-            var el = document.querySelector(s);
-            if (el) el.remove();
-          });
-        } catch(e){}
-      }];
-    };
+  // 切換語言
+  function switchLang(lang) {
+    localStorage.setItem('lang', lang);
+    location.reload();
   }
-
-  // If DISQUS already present, use DISQUS.reset
-  if (window.DISQUS && typeof window.DISQUS.reset === 'function') {
-    try {
-      window.DISQUS.reset({
-        reload: true,
-        config: makeConfig(lang)
-      });
-      return;
-    } catch (err) {
-      console.warn('DISQUS.reset failed, falling back to re-insert script', err);
-      // fallback to force reload below
-    }
-  }
-
-  // If no DISQUS global, append script normally
-  // remove any old script tag we created earlier
-  var old = document.getElementById('disqus-script');
-  if (old) old.remove();
-
-  // set global config factory
-  window.disqus_config = makeConfig(lang);
-
-  var d = document, s = d.createElement('script');
-  s.src = 'https://' + shortname + '.disqus.com/embed.js';
-  s.id = 'disqus-script';
-  s.setAttribute('data-timestamp', +new Date());
-  (d.head || d.body).appendChild(s);
-
-  // Extra fallback: if after X seconds language hasn't changed, do a hard reload
-  setTimeout(function() {
-    try {
-      // check some visible label text inside the Disqus container (best-effort)
-      var el = document.querySelector('#disqus_thread');
-      if (!el) return;
-      // if lang requested is 'ms' but page still shows 'Comments' (en), reload
-      // NOTE: this heuristic is imperfect and only tries when necessary
-      var txt = el.innerText || '';
-      if (lang === 'ms' && txt.indexOf('Komentar') === -1 && txt.indexOf('Comments') !== -1) {
-        // force full reload to ensure proper language load
-        // only do this once to avoid loops
-        if (!window._disqus_lang_reload_done) {
-          window._disqus_lang_reload_done = true;
-          location.reload();
-        }
-      }
-    } catch(e){}
-  }, 2500);
-}
-
-    // --- 初始化 ---
-    const savedLang = localStorage.getItem('forumLang');
-    const lang = savedLang || detectLanguage();
-    applyLanguage(lang);
   </script>
-
-  <noscript>請開啟 JavaScript 以查看留言。</noscript>
-
 </body>
 </html>
