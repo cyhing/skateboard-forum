@@ -96,24 +96,77 @@
       loadDisqus(lang);
     }
 
-    // --- 載入 Disqus ---
-    function loadDisqus(lang) {
-      // 移除舊的 Disqus script
-      const old = document.getElementById('disqus-script');
-      if (old) old.remove();
+/* Replace your existing loadDisqus(lang) with this */
+function loadDisqus(lang) {
+  var shortname = 'skateboard-my'; // <-- 確認你的 shortname
 
-      var disqus_config = function () {
-        this.page.url = window.location.href;
-        this.page.identifier = window.location.pathname || "skateboard-forum";
-        this.language = lang; // <--- 設定語言
-      };
+  // helper config factory
+  function makeConfig(code) {
+    return function() {
+      this.page.url = window.location.href;
+      this.page.identifier = window.location.pathname || "skateboard-forum";
+      // set language only if provided
+      if (code) this.language = code;
+      // try to hide reactions (best-effort)
+      this.callbacks.onReady = [function() {
+        try {
+          ['.disqus-reactions','.postbox__reactions','.disqus-recommendations'].forEach(function(s){
+            var el = document.querySelector(s);
+            if (el) el.remove();
+          });
+        } catch(e){}
+      }];
+    };
+  }
 
-      var d = document, s = d.createElement('script');
-      s.src = 'https://skateboard-my.disqus.com/embed.js';
-      s.id = 'disqus-script';
-      s.setAttribute('data-timestamp', +new Date());
-      (d.head || d.body).appendChild(s);
+  // If DISQUS already present, use DISQUS.reset
+  if (window.DISQUS && typeof window.DISQUS.reset === 'function') {
+    try {
+      window.DISQUS.reset({
+        reload: true,
+        config: makeConfig(lang)
+      });
+      return;
+    } catch (err) {
+      console.warn('DISQUS.reset failed, falling back to re-insert script', err);
+      // fallback to force reload below
     }
+  }
+
+  // If no DISQUS global, append script normally
+  // remove any old script tag we created earlier
+  var old = document.getElementById('disqus-script');
+  if (old) old.remove();
+
+  // set global config factory
+  window.disqus_config = makeConfig(lang);
+
+  var d = document, s = d.createElement('script');
+  s.src = 'https://' + shortname + '.disqus.com/embed.js';
+  s.id = 'disqus-script';
+  s.setAttribute('data-timestamp', +new Date());
+  (d.head || d.body).appendChild(s);
+
+  // Extra fallback: if after X seconds language hasn't changed, do a hard reload
+  setTimeout(function() {
+    try {
+      // check some visible label text inside the Disqus container (best-effort)
+      var el = document.querySelector('#disqus_thread');
+      if (!el) return;
+      // if lang requested is 'ms' but page still shows 'Comments' (en), reload
+      // NOTE: this heuristic is imperfect and only tries when necessary
+      var txt = el.innerText || '';
+      if (lang === 'ms' && txt.indexOf('Komentar') === -1 && txt.indexOf('Comments') !== -1) {
+        // force full reload to ensure proper language load
+        // only do this once to avoid loops
+        if (!window._disqus_lang_reload_done) {
+          window._disqus_lang_reload_done = true;
+          location.reload();
+        }
+      }
+    } catch(e){}
+  }, 2500);
+}
 
     // --- 初始化 ---
     const savedLang = localStorage.getItem('forumLang');
