@@ -6,12 +6,13 @@
 </head>
 <body>
   <h1 id="pageTitle">💬 Forum</h1>
+  <!--
   <div>
     <button onclick="switchLang('en')">English</button>
     <button onclick="switchLang('ms')">Bahasa Melayu</button>
     <button onclick="switchLang('zh_CN')">中文</button>
   </div>
-
+  -->
   <div id="disqus_thread"></div>
 
   <script>
@@ -21,7 +22,7 @@
                   navigator.language.startsWith('ms') ? 'ms' : 'en');
 
   // 根據語言改頁面標題
-  const titles = { en: "💬 Forum", ms: "💬 Forum (Bahasa Melayu)", zh_CN: "💬 讨论区" };
+  const titles = { en: "💬 Skateboard.my Forum", ms: "💬 Forum Skateboard.my", zh_CN: "💬 Skateboard.my 滑板论坛" };
   document.getElementById('pageTitle').innerText = titles[userLang] || titles['en'];
 
   // 建立 disqus_config
