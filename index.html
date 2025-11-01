@@ -1,37 +1,127 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Skateboard.my Forum</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  body{background:#f1f3f5; font-family:Inter,Arial,Helvetica,sans-serif; margin:0; padding:40px 0;}
-  .card{max-width:980px; margin:0 auto; background:#fff; border-radius:18px; padding:28px; box-shadow:0 14px 40px rgba(0,0,0,0.08);}
-  .title{font-size:20px; font-weight:700; text-align:center; margin-bottom:6px;}
-  .subtitle{color:#666; text-align:center; margin-bottom:18px;}
-  #disqus_thread{min-height:480px;}
-  @media(max-width:640px){ .card{margin:12px; padding:20px;} }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skateboard.my Forum</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background: #f7f8fa;
+      color: #333;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .lang-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #efefef;
+    }
+    #disqus_thread {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-  <div class="card">
-    <div class="title">💬 Skateboard.my Forum</div>
-    <div class="subtitle">Discuss tricks, repairs and beginner tips — 登录后留言</div>
-    <div id="disqus_thread"></div>
+
+  <header>
+    <h1 id="forum-title">Skateboard.my Forum</h1>
+    <p id="forum-description">Join the conversation about skateboarding in Malaysia!</p>
+  </header>
+
+  <div class="lang-buttons">
+    <button onclick="setLanguage('en')">🇬🇧 English</button>
+    <button onclick="setLanguage('zh')">🇨🇳 中文</button>
+    <button onclick="setLanguage('ms')">🇲🇾 Bahasa Melayu</button>
   </div>
 
-<script>
-var disqus_config = function () {
-  this.page.url = window.location.href;
-  this.page.identifier = window.location.pathname || "skateboard-forum";
-};
-(function() {
-  var d = document, s = d.createElement('script');
-  s.src = 'https://skateboard-my.disqus.com/embed.js';
-  s.setAttribute('data-timestamp', +new Date());
-  (d.head || d.body).appendChild(s);
-})();
-</script>
+  <div id="disqus_thread"></div>
+
+  <script>
+    // --- 語言資料 ---
+    const translations = {
+      en: {
+        title: "Skateboard.my Forum",
+        desc: "Join the conversation about skateboarding in Malaysia!"
+      },
+      zh: {
+        title: "Skateboard.my 滑板論壇",
+        desc: "一起來討論馬來西亞滑板的話題！"
+      },
+      ms: {
+        title: "Forum Skateboard.my",
+        desc: "Sertai perbincangan tentang skateboard di Malaysia!"
+      }
+    };
+
+    // --- 自動偵測語言 ---
+    function detectLanguage() {
+      const lang = navigator.language.toLowerCase();
+      if (lang.includes('zh')) return 'zh';
+      if (lang.includes('ms') || lang.includes('id')) return 'ms';
+      return 'en';
+    }
+
+    // --- 設定語言 ---
+    function setLanguage(lang) {
+      localStorage.setItem('forumLang', lang);
+      applyLanguage(lang);
+    }
+
+    // --- 套用語言 ---
+    function applyLanguage(lang) {
+      const t = translations[lang] || translations['en'];
+      document.getElementById('forum-title').textContent = t.title;
+      document.getElementById('forum-description').textContent = t.desc;
+      loadDisqus(lang);
+    }
+
+    // --- 載入 Disqus ---
+    function loadDisqus(lang) {
+      // 移除舊的 Disqus script
+      const old = document.getElementById('disqus-script');
+      if (old) old.remove();
+
+      var disqus_config = function () {
+        this.page.url = window.location.href;
+        this.page.identifier = window.location.pathname || "skateboard-forum";
+        this.language = lang; // <--- 設定語言
+      };
+
+      var d = document, s = d.createElement('script');
+      s.src = 'https://skateboard-my.disqus.com/embed.js';
+      s.id = 'disqus-script';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+
+    // --- 初始化 ---
+    const savedLang = localStorage.getItem('forumLang');
+    const lang = savedLang || detectLanguage();
+    applyLanguage(lang);
+  </script>
+
+  <noscript>請開啟 JavaScript 以查看留言。</noscript>
+
 </body>
 </html>
