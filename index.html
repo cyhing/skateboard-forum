@@ -82,15 +82,57 @@
     localStorage.setItem('lang', lang);
     location.reload();
   }
-  function sendHeight() {
-     const height = document.body.scrollHeight;
-     window.parent.postMessage({ type: "resizeForum", height }, "*");
-  }
-  window.addEventListener("load", sendHeight);
-  window.addEventListener("resize", sendHeight);
+  
+
+    
   </script>
 </body>
 </html>
 
+<!-- iframe 內頁 (GitHub Pages) -->
+<script>
+(function() {
+  // 傳送目前高度給父視窗
+  function postHeight() {
+    const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    window.parent.postMessage({ type: 'resizeForum', height: h }, '*');
+  }
+
+  // 1) 當頁面 load 時先發一次
+  window.addEventListener('load', function() {
+    postHeight();
+    // 再等 1000ms 再發一次，確保第三方部件 (Disqus) 加載完
+    setTimeout(postHeight, 1000);
+  });
+
+  // 2) MutationObserver：監聽 DOM 變化（例如 Disqus 加入留言節點）
+  const observer = new MutationObserver(function(mutations) {
+    // 若有變動，延遲發送（避免過多 postMessage）
+    clearTimeout(window.__resizeTimeout);
+    window.__resizeTimeout = setTimeout(postHeight, 200);
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+  // 3) fallback poll：若 MutationObserver 不可靠，定期檢查高度變化
+  let lastH = 0;
+  setInterval(function() {
+    const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    if (Math.abs(h - lastH) > 10) { // 只在高度有明顯變化時發送
+      lastH = h;
+      postHeight();
+    }
+  }, 800);
+
+  // 4) 回應父頁面 requestHeight
+  window.addEventListener('message', function(e) {
+    const d = e.data || {};
+    if (d.type === 'requestHeight') postHeight();
+  }, false);
+
+  // 如需 debug，解除下面註解會在 console 顯示高度
+  // setInterval(()=>console.log('height', document.body.scrollHeight), 2000);
+})();
+</script>
 
 
