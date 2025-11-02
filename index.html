@@ -86,6 +86,49 @@
 
     
   </script>
+
+  <script>
+(function() {
+  // 發送當前 document.body 的高度給 parent
+  function sendHeight() {
+    var h = Math.max(
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight,
+      document.body.scrollHeight,
+      document.body.offsetHeight
+    );
+    // 用 window.parent.postMessage 傳高度（字串或物件）
+    window.parent.postMessage({ type: 'setHeight', height: h }, '*');
+  }
+
+  // 1) 送一次載入高度
+  window.addEventListener('load', function() {
+    sendHeight();
+  });
+
+  // 2) 當視窗改變大小時再送一次
+  window.addEventListener('resize', function() {
+    sendHeight();
+  });
+
+  // 3) 監控 DOM 變動（例如 Disqus 載入、圖片或動態內容）
+  var mo = new MutationObserver(function(mutations) {
+    // 簡單 debounce：等 200ms 再送
+    if (typeof window.__resizeTimer !== 'undefined') clearTimeout(window.__resizeTimer);
+    window.__resizeTimer = setTimeout(function() {
+      sendHeight();
+    }, 200);
+  });
+  mo.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  // 4) 也可以每秒送一次（保險），視情況關掉
+  var interval = setInterval(sendHeight, 1500);
+
+  // 如果需要可以提供一個安全機制來只接受來自特定 parent，
+  // 例如在 postMessage 傳回來時檢查 event.origin（child 不需要此段）
+})();
+</script>
+
 </body>
 </html>
 
