@@ -82,16 +82,15 @@
     localStorage.setItem('lang', lang);
     location.reload();
   }
+  function sendHeight() {
+     const height = document.body.scrollHeight;
+     window.parent.postMessage({ type: "resizeForum", height }, "*");
+  }
+  window.addEventListener("load", sendHeight);
+  window.addEventListener("resize", sendHeight);
   </script>
 </body>
 </html>
 
-<script>
-function sendHeight() {
-  const height = document.body.scrollHeight;
-  window.parent.postMessage({ type: "resizeForum", height }, "*");
-}
-window.addEventListener("load", sendHeight);
-window.addEventListener("resize", sendHeight);
-</script>
+
 
