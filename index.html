@@ -87,50 +87,6 @@
     
   </script>
 
-  <script>
-(function() {
-  let lastHeight = 0;
-  let ticking = false;
-
-  function getHeight() {
-    return Math.max(
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight
-    );
-  }
-
-  function sendHeight(force = false) {
-    const newHeight = getHeight();
-    // 僅當高度差超過 10px 或是強制更新時才傳送
-    if (force || Math.abs(newHeight - lastHeight) > 10) {
-      lastHeight = newHeight;
-      window.parent.postMessage({ type: 'setHeight', height: newHeight }, '*');
-    }
-  }
-
-  // 初始 & 載入後送一次
-  window.addEventListener('load', () => sendHeight(true));
-
-  // resize 時（例如圖片載入後）
-  window.addEventListener('resize', () => sendHeight(true));
-
-  // 監控 DOM 變化
-  const mo = new MutationObserver(() => {
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(() => {
-        sendHeight();
-        ticking = false;
-      });
-    }
-  });
-  mo.observe(document.body, { childList: true, subtree: true });
-
-  // 保險用：每 2 秒檢查一次
-  setInterval(sendHeight, 2000);
-})();
-</script>
-
 </body>
 </html>
 
