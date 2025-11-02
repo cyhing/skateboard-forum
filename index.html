@@ -53,7 +53,19 @@
   // 建立 disqus_config
   var disqus_config = function () {
     this.page.url = window.location.href;
-    this.page.identifier = window.location.pathname;
+    //this.page.identifier = window.location.pathname;
+
+    // 根據 URL 判斷是否有指定版（例如 /forum/tech 或 /topic/street）
+    var path = window.location.pathname;
+
+    // 若 path 太短（例如只是 "/" 或 "/forum"），使用主版 "sk-main"
+    if (path === "/" || path === "/forum" || path === "/forum/") {
+      this.page.identifier = "sk-main";
+    } else {
+      // 否則用目前路徑作為版的識別碼
+      this.page.identifier = path.replace(/\//g, "-").replace(/^-|-$/g, "");
+    }
+
     this.language = userLang;
   };
 
